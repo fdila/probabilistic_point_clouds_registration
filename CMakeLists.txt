@@ -30,14 +30,16 @@ add_library(lib${PROJECT_NAME}
   include/prob_point_cloud_registration/output_stream.hpp)
 
 add_executable(${PROJECT_NAME} src/prob_point_cloud_registration_ex.cc)
+add_executable(probabilistic_benchmark src/probabilistic_benchmark.cc)
 
 add_executable(${PROJECT_NAME}_test
         test/test_main.cc
         test/ProbabilisticWeightsTest.cc
         test/PointCloudRegistrationTest.cc)
 
-target_link_libraries(${PROJECT_NAME}_test lib${PROJECT_NAME} ${GTEST_LIBRARIES} ${CERES_LIBRARIES} pthread)
+target_link_libraries(${PROJECT_NAME}_test lib${PROJECT_NAME} ${GTEST_LIBRARIES} ${CERES_LIBRARIES} ${PCL_LIBRARIES} pthread)
 target_link_libraries(${PROJECT_NAME} lib${PROJECT_NAME} ${CERES_LIBRARIES} ${PCL_LIBRARIES})
+target_link_libraries(probabilistic_benchmark lib${PROJECT_NAME} ${CERES_LIBRARIES} ${PCL_LIBRARIES})
 
 install(TARGETS lib${PROJECT_NAME} DESTINATION lib)
 install(FILES include/prob_point_cloud_registration/prob_point_cloud_registration_params.hpp
