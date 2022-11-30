@@ -5,11 +5,22 @@ from os.path import join
 import subprocess
 import pickle
 from math import pi
+from tqdm import tqdm
 
 def get_pcd_name_darpa(pcd_name):
     pcd_name = pcd_name.replace('.', '')
     pcd_name = pcd_name[:-3]
     return pcd_name
+
+def remove_zero_points(pcd):
+    """Remove zero points from a point cloud"""
+    center = np.array([0.0, 0.0, 0.0])
+    distances = np.linalg.norm(pcd.point["positions"].numpy() - center, axis=1)
+    idx_non_zero = distances > 0.01
+
+    new_pcd = o3d.t.geometry.PointCloud()
+    new_pcd.point["positions"] = pcd.point["positions"][idx_non_zero]
+    return new_pcd
 
 def get_lidar2baseframe_transform():
 
@@ -29,6 +40,13 @@ def get_lidar2baseframe_transform():
     T_imu2os[:3, :3] = o3d.geometry.get_rotation_matrix_from_quaternion([0, 0, 0, 1])
 
     total_transform = baseframe2cam @ T_c0i @ T_imu2os
+
+    T_source2lidar = np.eye(4)
+    T_source2lidar[0, 3] = -0.084
+    T_source2lidar[1, 3] = -0.025
+    T_source2lidar[2, 3] = 0.050
+    T_source2lidar[:3, :3] = o3d.geometry.get_rotation_matrix_from_quaternion([0.3893008, 0.0120883, -0.0029742, 0.9210265])
+    
     return total_transform
 
 def get_pcd_name_newer_college(sec, nsec):
@@ -39,7 +57,7 @@ if __name__ == '__main__':
     dataset_path = '/data/datasets/newer-college-dataset/2020-ouster-os1-64-realsense/01_short_experiment/raw_format/ouster_zip_files/ouster_scan-001/ouster_scan/'
     gt_path = '/data/datasets/newer-college-dataset/2020-ouster-os1-64-realsense/01_short_experiment/ground_truth/gt_0.csv'
     problems_path = '/data/datasets/newer-college-dataset/2020-ouster-os1-64-realsense/01_short_experiment/problems_0.txt'
-    output_path = '/data/datasets/newer-college-dataset/2020-ouster-os1-64-realsense/01_short_experiment/gt_check_0.dat'
+    output_path = '/data/datasets/newer-college-dataset/2020-ouster-os1-64-realsense/01_short_experiment/gt_check_0_kalibr_trimmed.dat'
     
     dataset_type = 'newer_college'
 
@@ -72,7 +90,7 @@ if __name__ == '__main__':
 
     results = []
     T_source2lidar = get_lidar2baseframe_transform()
-    for index, row in problems_df.iterrows():
+    for index, row in tqdm(problems_df.iterrows(), total=problems_df.shape[0]):
 
         if dataset_type == 'darpa':
             source_name = row['source'].replace('.', '') + '.pcd'
@@ -81,8 +99,11 @@ if __name__ == '__main__':
             source_name = 'cloud_' + row['source'] + '.pcd'
             target_name = 'cloud_' + row['target'] + '.pcd'
 
-        source = o3d.io.read_point_cloud(join(dataset_path, source_name))
-        target = o3d.io.read_point_cloud(join(dataset_path, target_name))
+        source = o3d.t.io.read_point_cloud(join(dataset_path, source_name))
+        target = o3d.t.io.read_point_cloud(join(dataset_path, target_name))
+
+        source = remove_zero_points(source)
+        target = remove_zero_points(target)
 
         if dataset_type == 'darpa':
             source_gt = gt_df.loc[gt_df['id'] == row['source']]
@@ -116,8 +137,8 @@ if __name__ == '__main__':
             source = source.transform(T_map2source_gt @ T_source2lidar)
             target = target.transform(T_map2target_gt @ T_source2lidar)
         
-        o3d.io.write_point_cloud('/tmp/source.pcd', source)
-        o3d.io.write_point_cloud('/tmp/target.pcd', target)
+        o3d.t.io.write_point_cloud('/tmp/source.pcd', source)
+        o3d.t.io.write_point_cloud('/tmp/target.pcd', target)
 
         command = [executable, "-r 0.1","-m 10","/tmp/source.pcd","/tmp/target.pcd"]
         print(command)
@@ -126,8 +147,8 @@ if __name__ == '__main__':
         results.append(result)
         print(result)
 
-        with open(output_path, 'wb') as out_file:
-            pickle.dump(command, out_file)
-            pickle.dump(results, out_file)
+    with open(output_path, 'wb') as out_file:
+        pickle.dump(command, out_file)
+        pickle.dump(results, out_file)
 
 
