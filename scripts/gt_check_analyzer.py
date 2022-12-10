@@ -11,7 +11,7 @@ def remove_outlier(values):
     return inlier
 
 if __name__ == '__main__':
-    data_filepath = '/data/datasets/newer-college-dataset/2020-ouster-os1-64-realsense/01_short_experiment/gt_check_0_kalibr.dat'
+    data_filepath = '/data/datasets/newer-college-dataset/2020-ouster-os1-64-realsense/01_short_experiment/gt_check_full_dataset_kalibr_trimmed_r01.dat'
 
     with open(data_filepath, "rb") as data_file:
         command = pickle.load(data_file)
