@@ -14,15 +14,21 @@ from tqdm import tqdm
 if __name__ == '__main__':
     executable = '/root/repos/probabilistic_point_clouds_registration/build/probabilistic_benchmark'
 
-    dataset_path = '/data/datasets/newer-college-dataset/2020-ouster-os1-64-realsense/01_short_experiment/raw_format/ouster_zip_files/ouster_scan/'
-    gt_path = '/data/datasets/newer-college-dataset/2020-ouster-os1-64-realsense/01_short_experiment/ground_truth/registered_poses.csv'
-    problems_path = '/data/datasets/newer-college-dataset/2020-ouster-os1-64-realsense/01_short_experiment/problems_full_dataset.txt'
-    output_path = '/data/datasets/newer-college-dataset/2020-ouster-os1-64-realsense/01_short_experiment/gt_check_full_dataset_kalibr_trimmed_r01.dat'
+    # dataset_path = '/data/datasets/newer-college-dataset/2020-ouster-os1-64-realsense/01_short_experiment/raw_format/ouster_zip_files/ouster_scan/'
+    # gt_path = '/data/datasets/newer-college-dataset/2020-ouster-os1-64-realsense/01_short_experiment/ground_truth/registered_poses.csv'
+    # problems_path = '/data/datasets/newer-college-dataset/2020-ouster-os1-64-realsense/01_short_experiment/problems_full_dataset.txt'
+    # output_path = '/data/datasets/newer-college-dataset/2020-ouster-os1-64-realsense/01_short_experiment/gt_check_full_dataset_kalibr_trimmed_r01.dat'
 
-    dataset_type = 'newer_college'
+    
+    dataset_path = "/data/datasets/DARPA_SubT/anymal_2/pcd"
+    gt_path = '/data/datasets/DARPA_SubT/anymal_2/gt.csv'
+    problems_path = '/data/datasets/DARPA_SubT/anymal_2/problems_full.txt'
+    output_path = '/data/datasets/DARPA_SubT/anymal_2/gt_check_full_dataset_r01.dat'
+
+    dataset_type = 'darpa'
 
     if dataset_type == 'darpa':
-        gt_df = darpa.get_ground_truth_df(gt_path)
+        gt_df = darpa.get_ground_truth_df_anymal_2(gt_path)
     elif dataset_type == 'newer_college':
         gt_df = newer_college.get_ground_truth_df(gt_path)
         T_source2lidar = newer_college.get_base2lidar_transform_kalibr()
